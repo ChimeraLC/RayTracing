@@ -1,0 +1,1 @@
+int display(unsigned char *image, int image_height, int image_width, char *filename);
