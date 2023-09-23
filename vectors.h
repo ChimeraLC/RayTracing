@@ -1,11 +1,16 @@
 // Shared structure definition
 typedef struct vec3 {
-        double e[3];
+        double x;
+        double y;
+        double z;
 } vec3;
 
 // Vector methods
 vec3 vec_new(double x, double y, double z);
+vec3 vec_copy(vec3 v);
 vec3 vec_neg(vec3 v);
+vec3 vec_rand(double min, double max);
+vec3 vec_rand_unit();
 vec3 vec_add(vec3 v1, vec3 v2);
 vec3 vec_sub(vec3 v1, vec3 v2);
 vec3 vec_mult(vec3 v, double c);
