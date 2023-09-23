@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "vectors.h"
 
 // Creates a new vector with the given values

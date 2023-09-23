@@ -1,9 +1,10 @@
 // This file handles ray collisions with objects
-#include <math.h>       
+#include <math.h>   
+#include <stdio.h>
 #include "vectors.h"
-#include "rays.h"
+#include "rays.h"    
+#include "materials.h"
 #include "collisions.h"
-
 /*
 Solves the quadratic equation with the given values, returning the smallest nonegative answer
 Assumes a, b, c are valid coefficients
@@ -20,8 +21,8 @@ solve(double a, double b, double c) {
         r1 = (-b + sqrt(disc)) / (2 * a);
         r2 = (-b - sqrt(disc)) / (2 * a);
         // Return smallest nonzero
-        if (r1 > r2) return r1;
-        return r2;
+        if (r2 > 0) return r2;
+        return r1;
 }
 
 /*
@@ -46,8 +47,7 @@ norm_sphere(ray r, double t, sphere s) {
         // Get normal vector
         vec3 norm = vec_unit(vec_sub(ray_at(r, t), s.center));
         // Get direction of vector
-        //return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
-        return norm;
+        return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
 }
 
 // Returns a diffusion vector from a sphere
@@ -59,9 +59,10 @@ diff_sphere(vec3 normal) {
 
 // Returns a new sphere object
 sphere
-new_sphere(vec3 center, double radius) {
+new_sphere(vec3 center, double radius, material mat) {
         sphere s_new;
         s_new.center = center;
         s_new.radius = radius;
+        s_new.mat = mat;
         return s_new;
 }
