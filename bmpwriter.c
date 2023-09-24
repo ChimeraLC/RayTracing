@@ -13,36 +13,62 @@ void generateBitmapImage(unsigned char* image, int height, int width, char* img_
 unsigned char* createBitmapFileHeader(int height, int stride);
 unsigned char* createBitmapInfoHeader(int height, int width);
 
-// Created a .bmp file with the given filename containing pixel data from image
-int display(unsigned char *image, int image_width, int image_height, char *filename)
-{
+// Constant values
+FILE *fp;   // File to write to
+int image_width;    // Pixel width of image
+int byte_width;     // Bytes per line
+int padding_size;   // Padding size
+unsigned char padding[3] = {0, 0, 0};   // Padding
+int stride;     // Stride (unecessary?)
 
-        // Generate actual file
-        int byte_width = image_width * 3;
-        unsigned char padding[3] = {0, 0, 0};
-        int padding_size = (4 - (byte_width) % 4) % 4;
+// Initializes the filewriter to write to the given file
+int 
+init_writer(int image_wid, int image_height, char *filename) {
 
-        int stride = byte_width + padding_size;
+        // Generate necessary values
+        image_width = image_wid;
+        byte_width = image_wid * 3;
+        padding_size = (4 - (byte_width) % 4) % 4;
+        stride = byte_width + padding_size;
 
         // Open file
-        FILE *fp;
         fp = fopen(filename, "wb");
 
-        // Write data to file
+        // Write headers
         unsigned char* fileHeader = createBitmapFileHeader(image_height, stride);
         fwrite(fileHeader, 1, FILE_HEADER_SIZE, fp);
 
         unsigned char* infoHeader = createBitmapInfoHeader(image_height, image_width);
         fwrite(infoHeader, 1, INFO_HEADER_SIZE, fp);
 
+        // Return 0 when done
+        return 0;
+}
+
+// Writes a single line of the image to the file
+int 
+write_line(unsigned char *image) {
+        fwrite(image, 3, image_width, fp);
+        fwrite(padding, 1, padding_size, fp);
+        return 0;
+}
+
+// Cleans up files
+int 
+close_writer() {
+    fclose(fp);
+    return 0;
+}
+
+// Created a .bmp file with the given filename containing pixel data from image
+int 
+display(unsigned char *image, int image_height)
+{
+
         for (int i = 0; i < image_height; i++) {
                 fwrite(image + (i*byte_width), 3, image_width, fp);
                 fwrite(padding, 1, padding_size, fp);
         }
-
-        // Close file
-        fclose(fp);
-
         // Return 0 on success
         return 0;
 }

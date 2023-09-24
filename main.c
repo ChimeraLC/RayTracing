@@ -18,8 +18,8 @@
 // Default material
 material default_mat;
 
-int sphere_count = 3;
-sphere spheres[3];
+int sphere_count = 0;;
+sphere *spheres;
 
 
 // Returns a vector of three values correponding to the color from a direction
@@ -63,10 +63,10 @@ main(int argc, char **argv)
         (void) argv;       
 
         // Image details
-        int image_width = 800;
-        int image_height = 400;
+        int image_width = 1280;
+        int image_height = 720;
         double aspect_ratio = 1; (void) aspect_ratio;
-        unsigned char image[image_height][image_width][3];
+        unsigned char image[image_width][3];                      // TODO: feed one by one to prevent oversized
 
         // Calculate viewport (-w/2, -h/2, -d) to (w/2, h/2, d)
         double view_height = 2;
@@ -86,21 +86,28 @@ main(int argc, char **argv)
         vec3 view_center = vec_new(0, 0, view_dist);
 
         // Rendering options
-        int pixel_samples = 30; // Number of samples for each ray
+        int pixel_samples = 20; // Number of samples for each ray
         int render_bounces = 10;  // Number of recursive render calls per ray
-
         // Creating objects
+        sphere_count = 4;
+        spheres = malloc(sphere_count * sizeof(sphere));
         default_mat = mat_basic(0.5);
-        spheres[0] = new_sphere(vec_new(0,-100.5,1), 100, mat_basic(0.8));
-        spheres[1] = new_sphere(vec_new(0, 0, 1), 0.5, mat_metal(0.5));
-        spheres[2] = new_sphere(vec_new(1, 0, 1), 0.5, mat_basic(0.5));
+        spheres[0] = new_sphere(vec_new(0,-100.5,1), 100, mat_basic(0.5));
+        spheres[1] = new_sphere(vec_new(0, 0, 1), 0.5, mat_metal(0.8));
+        spheres[2] = new_sphere(vec_new(1, 0, 1), 0.5, mat_metal(0.5));
+        spheres[3] = new_sphere(vec_new(-1, 0, -5), 0.5, mat_basic(0.5));
         //spheres[0] = new_sphere(vec_new(0, 0, 1), 0.2, 0.5);
         
+        // Initialize image writer
+        init_writer(image_width, image_height, "bitmap.bmp");
 
         // Iterate through pixels
         int i, j;
-        for (i = 0; i < image_height; i++) {
-                printf("\rScanlines remaining: %d ", image_height - i);
+        // Render each line one by one
+        for (i = image_height - 1; i >= 0; i--) {
+                // Progress display
+                printf("\rScanlines remaining: %d ", i);
+                // Go through each pixel in the line
                 for (j = 0; j < image_width; j++) {
                         // Find desired view position
                         vec3 pixel_point = vec_copy(cam_position);
@@ -126,12 +133,13 @@ main(int argc, char **argv)
 
                         // TODO: force between 0 and 1
                         
-                        image[image_height - i - 1][j][2] = (unsigned char) ( sqrt(color.x) * 255 );             //red
-                        image[image_height - i - 1][j][1] = (unsigned char) ( sqrt(color.y) * 255 );              //green
-                        image[image_height - i - 1][j][0] = (unsigned char) ( sqrt(color.z) * 255 );      //blue
+                        image[j][2] = (unsigned char) ( sqrt(color.x) * 255 );             //red
+                        image[j][1] = (unsigned char) ( sqrt(color.y) * 255 );              //green
+                        image[j][0] = (unsigned char) ( sqrt(color.z) * 255 );      //blue
                 }
+                // Write each line to the file
+                write_line((unsigned char *) image);
         }
         printf("\rRender complete         "); 
-        // Open file to write in
-        display((unsigned char*) image, image_width, image_height, "bitmap.bmp");
+        close_writer();
 }
