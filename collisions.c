@@ -26,8 +26,10 @@ solve(double a, double b, double c) {
 }
 
 /*
-Returns the position along the ray r that it intersects the sphere centered at center of radius radius
-*/ 
+ *                     Sphere Collisions
+ */
+
+//Returns the position along the ray r that it intersects the sphere centered at center of radius radius 
 double
 ray_sphere(ray r, sphere s) {
         // Find analytic values to solve
@@ -65,4 +67,81 @@ new_sphere(vec3 center, double radius, material mat) {
         s_new.radius = radius;
         s_new.mat = mat;
         return s_new;
+}
+
+
+/*
+ *                     Rectangle Collisions
+ */
+
+// Returns the earliest position t that a ray r intersects p
+double
+ray_rect(ray r, rect p) {
+        // Find intersection point with plane
+        vec3 norm = vec_cross(p.edge1, p.edge2);
+        double t = norm.x * (p.corner.x - r.origin.x) +
+            norm.y * (p.corner.y - r.origin.y) +
+            norm.z * (p.corner.z - r.origin.z);
+        t /= norm.x * r.dir.x + norm.y * r.dir.y + norm.z * r.dir.z;
+        return t;
+}
+
+// Returns the normal vector to the rect
+vec3
+norm_rect(ray r, rect p) {
+        // Normal vector from plane
+        vec3 norm = vec_unit(vec_cross(p.edge1, p.edge2));
+        // Return correct direction
+        norm =  (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
+        return norm;
+}
+
+// Returns a new rect
+rect
+new_rect(vec3 corner, vec3 edge1, vec3 edge2, material mat) {
+        rect r_new;
+        r_new.corner = corner;
+        r_new.edge1 = edge1;
+        r_new.edge2 = edge2;
+        r_new.mat = mat;
+        return r_new;
+}
+
+/*
+ *                     Rectangle Prism Collisions
+ */
+
+// Returns the earliest position t that a ray r intersects p
+double
+ray_rect_prism(ray r, rect_prism p) {
+        // Find closest corner
+        vec3 closest = p.corner;
+        double dist_min = vec_mag2(vec_sub(r.origin, p.corner));
+        // Check 7 other possible corners
+        vec3 potential;
+        double dist;
+        int corner; // Tracking corner position relative to actual corner
+        for (int i = 1; i <= 8; i++) {
+                // Find corner positibilities using bit operations
+                potential = p.corner;
+                if (i & 0x1) {
+                        potential = vec_add(potential, p.edge1);
+                }
+                if ((i >> 1) & 0x1) {
+                        potential = vec_add(potential, p.edge2);
+                }
+                if ((i >> 2) & 0x1) {
+                        potential = vec_add(potential, p.edge3);
+                }
+                // Find distance
+                dist = vec_mag2(vec_sub(r.origin, potential));
+                if (dist < dist_min) {
+                        dist_min = dist;
+                        closest = potential;
+                        corner = i;
+                }
+        }
+        (void) corner;
+        (void) closest;
+        return 0;
 }

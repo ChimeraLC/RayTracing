@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <unistd.h>
 
 #include "bmpwriter.h"
 #include "vectors.h"
@@ -18,8 +17,10 @@
 // Default material
 material default_mat;
 
-int sphere_count = 0;;
+int sphere_count = 0;
 sphere *spheres;
+int rect_count = 0;
+rect *rects;
 
 
 // Returns a vector of three values correponding to the color from a direction
@@ -32,7 +33,7 @@ vec3 render_ray(ray r, int bounces) {
         double a, t, t_close = INFINITY;
         vec3 norm;
         material mat = default_mat;
-        // Chekc collisions with all objects
+        // Chekc collisions with all spheres
         for (int i = 0; i < sphere_count; i++) {
                 // Find the earliest collision with an object that's not self
                 if ((t = ray_sphere(r, spheres[i])) > MIN_DIST && t < t_close) {
@@ -42,6 +43,17 @@ vec3 render_ray(ray r, int bounces) {
                         mat = spheres[i].mat;
                 }
         }
+        // Check collisions with all rects
+        for (int i = 0; i < rect_count; i++) {
+                // Find the earliest collision with an object that's not self
+                if ((t = ray_rect(r, rects[i])) > MIN_DIST && t < t_close) {
+                        t_close = t;
+                        norm = norm_rect(r, rects[i]);
+                        // Save bounce material
+                        mat = rects[i].mat;
+                }
+        }
+
         if (t_close != INFINITY) {
                 // Diffraction direction based on material
                 vec3 diff = mat.diff(r, norm);
@@ -63,8 +75,8 @@ main(int argc, char **argv)
         (void) argv;       
 
         // Image details
-        int image_width = 1280;
-        int image_height = 720;
+        int image_width = 720;
+        int image_height = 480;
         double aspect_ratio = 1; (void) aspect_ratio;
         unsigned char image[image_width][3];                      // TODO: feed one by one to prevent oversized
 
@@ -72,6 +84,10 @@ main(int argc, char **argv)
         double view_height = 2;
         double view_width = view_height * ((double) image_width / image_height);
         double view_dist = 1;   // Distance between camera and viewport
+
+        // 'Camera' position
+        vec3 cam_position = vec_new(0, 0, 0);
+        vec3 view_center = vec_new(0, 0, view_dist);
 
         // Vector representations
         vec3 view_horizontal = vec_new(view_width, 0, 0);
@@ -81,22 +97,32 @@ main(int argc, char **argv)
         vec3 pixel_horizontal = vec_div(view_horizontal, image_width);
         vec3 pixel_vertical = vec_div(view_vertical, image_height);
 
-        // 'Camera' position
-        vec3 cam_position = vec_new(0, 0, 0);
-        vec3 view_center = vec_new(0, 0, view_dist);
-
         // Rendering options
         int pixel_samples = 20; // Number of samples for each ray
         int render_bounces = 10;  // Number of recursive render calls per ray
+
         // Creating objects
-        sphere_count = 4;
-        spheres = malloc(sphere_count * sizeof(sphere));
         default_mat = mat_basic(0.5);
-        spheres[0] = new_sphere(vec_new(0,-100.5,1), 100, mat_basic(0.5));
-        spheres[1] = new_sphere(vec_new(0, 0, 1), 0.5, mat_metal(0.8));
-        spheres[2] = new_sphere(vec_new(1, 0, 1), 0.5, mat_metal(0.5));
-        spheres[3] = new_sphere(vec_new(-1, 0, -5), 0.5, mat_basic(0.5));
-        //spheres[0] = new_sphere(vec_new(0, 0, 1), 0.2, 0.5);
+        // Spheres
+        sphere_count = 2;
+        spheres = malloc(sphere_count * sizeof(sphere));
+        if (spheres == NULL) {
+                printf("Memory error\n");
+                return -1;
+        }
+        spheres[1] = new_sphere(vec_new(0,-100.5,1), 100, mat_metal(0.5));
+        spheres[0] = new_sphere(vec_new(0, 0, 1), 0.5, mat_basic(0.5));
+        //spheres[1] = new_sphere(vec_new(1, 0, 1), 0.5, mat_metal(0.5));
+        //spheres[3] = new_sphere(vec_new(-1, 0, -5), 0.5, mat_basic(0.5));
+
+        // Rectangles
+        rect_count = 0;
+        rects = malloc(rect_count * sizeof(rect));
+        if (rects == NULL) {
+                printf("Memory error\n");
+                return -1;
+        }
+        //rects[0] = new_rect(vec_new(0, -1, 0), vec_new(1, 0, 0), vec_new(0, 0, 1), mat_metal(0.5));
         
         // Initialize image writer
         init_writer(image_width, image_height, "bitmap.bmp");
@@ -110,8 +136,7 @@ main(int argc, char **argv)
                 // Go through each pixel in the line
                 for (j = 0; j < image_width; j++) {
                         // Find desired view position
-                        vec3 pixel_point = vec_copy(cam_position);
-                        pixel_point = vec_add(pixel_point, view_center);
+                        vec3 pixel_point = vec_copy(view_center);
                         pixel_point = vec_add(vec_neg(vec_div(view_horizontal, 2)), pixel_point);
                         pixel_point = vec_add(vec_neg(vec_div(view_vertical, 2)), pixel_point);
 
