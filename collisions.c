@@ -83,6 +83,24 @@ ray_rect(ray r, rect p) {
             norm.y * (p.corner.y - r.origin.y) +
             norm.z * (p.corner.z - r.origin.z);
         t /= norm.x * r.dir.x + norm.y * r.dir.y + norm.z * r.dir.z;
+        
+        // Location of plane intersection
+        vec3 coll = ray_at(r, t);
+        vec3 disp = vec_sub(coll, p.corner);
+
+        // Check that it is in the right place along the sides
+        vec3 proj;
+        // Check projection onto sides
+        proj = vec_proj(disp, p.edge1);
+        if (vec_dot(p.edge1, proj) < 0 || vec_mag2(proj) > vec_mag(p.edge1)) {
+                return -1;
+        }
+        
+        proj = vec_proj(disp, p.edge2);
+        if (vec_dot(p.edge2, proj) < 0 || vec_mag2(proj) > vec_mag(p.edge2)) {
+                return -1;
+        }
+
         return t;
 }
 

@@ -21,3 +21,4 @@ double vec_mag(vec3 v);
 vec3 vec_unit(vec3 v);
 double vec_dot(vec3 v1, vec3 v2);
 vec3 vec_cross(vec3 v1, vec3 v2);
+vec3 vec_proj(vec3 v1, vec3 v2);

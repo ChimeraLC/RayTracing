@@ -12,7 +12,7 @@
 #include "collisions.h"
 
 // Constants definitions
-#define MIN_DIST 0.01   // Minimum distance required for an intersection
+#define MIN_DIST 0.0001   // Minimum distance required for an intersection
 
 // Default material
 material default_mat;
@@ -86,8 +86,8 @@ main(int argc, char **argv)
         double view_dist = 1;   // Distance between camera and viewport
 
         // 'Camera' position
-        vec3 cam_position = vec_new(0, 0, 0);
-        vec3 view_center = vec_new(0, 0, view_dist);
+        vec3 cam_position = vec_new(0, 0, -1);
+        vec3 view_center = vec_new(0, 0, view_dist-1);
 
         // Vector representations
         vec3 view_horizontal = vec_new(view_width, 0, 0);
@@ -104,25 +104,26 @@ main(int argc, char **argv)
         // Creating objects
         default_mat = mat_basic(0.5);
         // Spheres
-        sphere_count = 2;
+        sphere_count = 1;
         spheres = malloc(sphere_count * sizeof(sphere));
         if (spheres == NULL) {
                 printf("Memory error\n");
                 return -1;
         }
-        spheres[1] = new_sphere(vec_new(0,-100.5,1), 100, mat_metal(0.5));
+        //spheres[1] = new_sphere(vec_new(0,-100.5,1), 100, mat_metal(0.5));
         spheres[0] = new_sphere(vec_new(0, 0, 1), 0.5, mat_basic(0.5));
         //spheres[1] = new_sphere(vec_new(1, 0, 1), 0.5, mat_metal(0.5));
         //spheres[3] = new_sphere(vec_new(-1, 0, -5), 0.5, mat_basic(0.5));
 
         // Rectangles
-        rect_count = 0;
+        rect_count = 2;
         rects = malloc(rect_count * sizeof(rect));
         if (rects == NULL) {
                 printf("Memory error\n");
                 return -1;
         }
-        //rects[0] = new_rect(vec_new(0, -1, 0), vec_new(1, 0, 0), vec_new(0, 0, 1), mat_metal(0.5));
+        rects[0] = new_rect(vec_new(-0.5, -0.5, 0), vec_new(1.5, 0, 0), vec_new(0, 0, 1), mat_metal(0.5));
+        rects[1] = new_rect(vec_new(-0.5, -1, 2.5), vec_new(0.5, 4, 0), vec_new(-2.5, 0, -1.5), mat_metal(0.5));
         
         // Initialize image writer
         init_writer(image_width, image_height, "bitmap.bmp");

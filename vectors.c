@@ -145,3 +145,12 @@ vec_cross(vec3 v1, vec3 v2) {
         v_new.z = v1.x * v2.y - v1.y * v2.x;
         return v_new;
 }
+
+// Returns the projection of v1 onto v2
+vec3
+vec_proj(vec3 v1, vec3 v2) {
+        vec3 v_new = vec_copy(v2);
+        v_new = vec_mult(v_new, vec_dot(v1, v2));
+        v_new = vec_div(v_new, vec_mag2(v2));
+        return v_new;
+}
