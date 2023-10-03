@@ -20,7 +20,7 @@ material default_mat;
 int sphere_count = 0;
 sphere *spheres;
 int rect_count = 0;
-rect *rects;
+rect_prism *rects;
 
 
 // Returns a vector of three values correponding to the color from a direction
@@ -46,9 +46,9 @@ vec3 render_ray(ray r, int bounces) {
         // Check collisions with all rects
         for (int i = 0; i < rect_count; i++) {
                 // Find the earliest collision with an object that's not self
-                if ((t = ray_rect(r, rects[i])) > MIN_DIST && t < t_close) {
+                if ((t = ray_rect_prism(r, rects[i])) > MIN_DIST && t < t_close) {
                         t_close = t;
-                        norm = norm_rect(r, rects[i]);
+                        norm = norm_rect_prism(r, rects[i], t);
                         // Save bounce material
                         mat = rects[i].mat;
                 }
@@ -117,13 +117,13 @@ main(int argc, char **argv)
 
         // Rectangles
         rect_count = 2;
-        rects = malloc(rect_count * sizeof(rect));
+        rects = malloc(rect_count * sizeof(rect_prism));
         if (rects == NULL) {
                 printf("Memory error\n");
                 return -1;
         }
-        rects[0] = new_rect(vec_new(-0.5, -0.5, 0), vec_new(1.5, 0, 0), vec_new(0, 0, 1), mat_metal(0.5));
-        rects[1] = new_rect(vec_new(-0.5, -1, 2.5), vec_new(0.5, 4, 0), vec_new(-2.5, 0, -1.5), mat_metal(0.5));
+        rects[0] = new_rect_prism(vec_new(-0.5, -0.5, 0), vec_new(1.5, 0, 0), vec_new(0, 0, 1), vec_new(0, -2, 0), mat_metal(0.5));
+        rects[1] = new_rect_prism(vec_new(-0.5, -1, 2.5), vec_new(0, 4, 0), vec_new(-2.5, 0, 0), vec_new(0, 0, 1.5), mat_metal(0.5));
         
         // Initialize image writer
         init_writer(image_width, image_height, "bitmap.bmp");
@@ -133,7 +133,7 @@ main(int argc, char **argv)
         // Render each line one by one
         for (i = image_height - 1; i >= 0; i--) {
                 // Progress display
-                printf("\rScanlines remaining: %d ", i);
+                printf("\rProgress: %.2f%% ", (double) (image_height - 1 - i) * 100 / image_height);
                 // Go through each pixel in the line
                 for (j = 0; j < image_width; j++) {
                         // Find desired view position

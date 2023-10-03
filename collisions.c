@@ -69,7 +69,34 @@ new_sphere(vec3 center, double radius, material mat) {
         return s_new;
 }
 
+/* 
+ *                      General 2d collisions
+*/
 
+// Returns the collion point of a ray with the given plane defined by a point and two edges
+double
+ray_plane(ray r, vec3 corner, vec3 edge1, vec3 edge2) {
+        // Find intersection point with plane
+        vec3 norm = vec_cross(edge1, edge2);
+        double t = norm.x * (corner.x - r.origin.x) +
+            norm.y * (corner.y - r.origin.y) +
+            norm.z * (corner.z - r.origin.z);
+        t /= norm.x * r.dir.x + norm.y * r.dir.y + norm.z * r.dir.z;
+        return t;
+}
+
+// Returns whether a collion point lies within the edge
+// disp is the displacement from the edge source
+double
+check_edge(vec3 disp, vec3 edge)
+{
+        vec3 proj = vec_proj(disp, edge);
+        // Return -1 if outside bounds
+        if (vec_dot(edge, proj) < 0 || vec_mag2(proj) > vec_mag(edge)) {
+                return -1;
+        }
+        return 0;
+}
 /*
  *                     Rectangle Collisions
  */
@@ -78,26 +105,18 @@ new_sphere(vec3 center, double radius, material mat) {
 double
 ray_rect(ray r, rect p) {
         // Find intersection point with plane
-        vec3 norm = vec_cross(p.edge1, p.edge2);
-        double t = norm.x * (p.corner.x - r.origin.x) +
-            norm.y * (p.corner.y - r.origin.y) +
-            norm.z * (p.corner.z - r.origin.z);
-        t /= norm.x * r.dir.x + norm.y * r.dir.y + norm.z * r.dir.z;
+        double t = ray_plane(r, p.corner, p.edge1, p.edge2);
         
         // Location of plane intersection
         vec3 coll = ray_at(r, t);
         vec3 disp = vec_sub(coll, p.corner);
 
         // Check that it is in the right place along the sides
-        vec3 proj;
-        // Check projection onto sides
-        proj = vec_proj(disp, p.edge1);
-        if (vec_dot(p.edge1, proj) < 0 || vec_mag2(proj) > vec_mag(p.edge1)) {
+        if (check_edge(disp, p.edge1)) {
                 return -1;
         }
         
-        proj = vec_proj(disp, p.edge2);
-        if (vec_dot(p.edge2, proj) < 0 || vec_mag2(proj) > vec_mag(p.edge2)) {
+        if (check_edge(disp, p.edge2)) {
                 return -1;
         }
 
@@ -138,7 +157,6 @@ ray_rect_prism(ray r, rect_prism p) {
         // Check 7 other possible corners
         vec3 potential;
         double dist;
-        int corner; // Tracking corner position relative to actual corner
         for (int i = 1; i <= 8; i++) {
                 // Find corner positibilities using bit operations
                 potential = p.corner;
@@ -156,10 +174,72 @@ ray_rect_prism(ray r, rect_prism p) {
                 if (dist < dist_min) {
                         dist_min = dist;
                         closest = potential;
-                        corner = i;
                 }
         }
-        (void) corner;
-        (void) closest;
-        return 0;
+        // Check each rectangle
+        double t;
+        // Side 1
+        t = ray_plane(r, closest, p.edge1, p.edge2);
+        if (t > 0) {
+                // Check if on prism
+                vec3 coll = ray_at(r, t);
+                vec3 disp = vec_sub(coll, p.corner);
+                if (!check_edge(disp, p.edge1) && !check_edge(disp, p.edge2) && !check_edge(disp, p.edge3)) {
+                        return t;
+                }
+        }
+        // Side 2
+        t = ray_plane(r, closest, p.edge1, p.edge3);
+        if (t > 0) {
+                // Check if on prism
+                vec3 coll = ray_at(r, t);
+                vec3 disp = vec_sub(coll, p.corner);
+                if (!check_edge(disp, p.edge1) && !check_edge(disp, p.edge2) && !check_edge(disp, p.edge3)) {
+                        return t;
+                }
+        }
+        // Side 3
+        t = ray_plane(r, closest, p.edge2, p.edge3);
+        if (t > 0) {
+                // Check if on prism
+                vec3 coll = ray_at(r, t);
+                vec3 disp = vec_sub(coll, p.corner);
+                if (check_edge(disp, p.edge1) || check_edge(disp, p.edge2) || check_edge(disp, p.edge3)) {
+                        return -1;
+                }
+                return t;
+        }
+        return -1;
+}
+// Returns the normal vector to the rect_prism
+vec3
+norm_rect_prism(ray r, rect_prism p, double t) {
+        // Find which side it intersected TODO: very poorly done
+        vec3 coll = ray_at(r, t);
+        vec3 disp = vec_sub(coll, p.corner);
+        vec3 proj, norm;
+        proj = vec_proj(disp, p.edge1);
+        if (vec_mag2(proj) <= 0.001 || vec_mag2(vec_sub(proj, p.edge1)) <= 0.001) {
+                norm = vec_unit(vec_cross(p.edge2, p.edge3));
+                return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
+        }
+        proj = vec_proj(disp, p.edge2);
+        if (vec_mag2(proj) <= 0.001 || vec_mag2(vec_sub(proj, p.edge2)) <= 0.001) {
+                norm = vec_unit(vec_cross(p.edge1, p.edge3));
+                return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
+        }
+        norm = vec_unit(vec_cross(p.edge1, p.edge2));
+        return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
+}
+
+// Returns a new prism
+rect_prism
+new_rect_prism(vec3 corner, vec3 edge1, vec3 edge2, vec3 edge3, material mat) {
+        rect_prism r_new;
+        r_new.corner = corner;
+        r_new.edge1 = edge1;
+        r_new.edge2 = edge2;
+        r_new.edge3 = edge3;
+        r_new.mat = mat;
+        return r_new;
 }
