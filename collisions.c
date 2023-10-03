@@ -139,7 +139,9 @@ new_rect(vec3 corner, vec3 edge1, vec3 edge2, material mat) {
         rect r_new;
         r_new.corner = corner;
         r_new.edge1 = edge1;
-        r_new.edge2 = edge2;
+        // Making sure orthogonal
+        vec3 proj_2 = vec_proj(edge2, edge1);
+        r_new.edge2 = vec_sub(edge2, proj_2);
         r_new.mat = mat;
         return r_new;
 }
@@ -238,8 +240,13 @@ new_rect_prism(vec3 corner, vec3 edge1, vec3 edge2, vec3 edge3, material mat) {
         rect_prism r_new;
         r_new.corner = corner;
         r_new.edge1 = edge1;
-        r_new.edge2 = edge2;
-        r_new.edge3 = edge3;
+        // Making sure orthogonal
+        vec3 proj_2 = vec_proj(edge2, edge1);
+        r_new.edge2 = vec_sub(edge2, proj_2);
+        // Making sure orthogonal
+        vec3 proj_3_1 = vec_proj(edge3, edge1);
+        vec3 proj_3_2 = vec_proj(edge3, edge2);
+        r_new.edge3 = vec_sub(vec_sub(edge2, proj_3_1), proj_3_2);
         r_new.mat = mat;
         return r_new;
 }

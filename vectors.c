@@ -154,3 +154,12 @@ vec_proj(vec3 v1, vec3 v2) {
         v_new = vec_div(v_new, vec_mag2(v2));
         return v_new;
 }
+
+/* Returns *char representation of v
+char
+*vec_string(vec3 v) {
+        char ret_str[30];
+        sprintf(ret_str, "(%.2f, %.2f, %.2f)", v.x, v.y, v.z);
+        return ret_str;
+}
+*/

@@ -22,3 +22,4 @@ vec3 vec_unit(vec3 v);
 double vec_dot(vec3 v1, vec3 v2);
 vec3 vec_cross(vec3 v1, vec3 v2);
 vec3 vec_proj(vec3 v1, vec3 v2);
+//char *vec_string(vec3 v);
