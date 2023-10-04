@@ -221,12 +221,12 @@ norm_rect_prism(ray r, rect_prism p, double t) {
         vec3 disp = vec_sub(coll, p.corner);
         vec3 proj, norm;
         proj = vec_proj(disp, p.edge1);
-        if (vec_mag2(proj) <= 0.001 || vec_mag2(vec_sub(proj, p.edge1)) <= 0.001) {
+        if (vec_mag2(proj) <= 0.0001 || vec_mag2(vec_sub(proj, p.edge1)) <= 0.0001) {
                 norm = vec_unit(vec_cross(p.edge2, p.edge3));
                 return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
         }
         proj = vec_proj(disp, p.edge2);
-        if (vec_mag2(proj) <= 0.001 || vec_mag2(vec_sub(proj, p.edge2)) <= 0.001) {
+        if (vec_mag2(proj) <= 0.0001 || vec_mag2(vec_sub(proj, p.edge2)) <= 0.0001) {
                 norm = vec_unit(vec_cross(p.edge1, p.edge3));
                 return (vec_dot(r.dir, norm) < 0) ? norm : vec_neg(norm);
         }
@@ -241,12 +241,14 @@ new_rect_prism(vec3 corner, vec3 edge1, vec3 edge2, vec3 edge3, material mat) {
         r_new.corner = corner;
         r_new.edge1 = edge1;
         // Making sure orthogonal
-        vec3 proj_2 = vec_proj(edge2, edge1);
-        r_new.edge2 = vec_sub(edge2, proj_2);
+        //vec3 proj_2 = vec_proj(edge2, edge1);
+        //r_new.edge2 = vec_sub(edge2, proj_2);
+        r_new.edge2 = edge2;
         // Making sure orthogonal
-        vec3 proj_3_1 = vec_proj(edge3, edge1);
-        vec3 proj_3_2 = vec_proj(edge3, edge2);
-        r_new.edge3 = vec_sub(vec_sub(edge2, proj_3_1), proj_3_2);
+        //vec3 proj_3_1 = vec_proj(edge3, edge1);
+        //vec3 proj_3_2 = vec_proj(edge3, edge2);
+        //r_new.edge3 = vec_sub(vec_sub(edge2, proj_3_1), proj_3_2);
+        r_new.edge3 = edge3;
         r_new.mat = mat;
         return r_new;
 }
